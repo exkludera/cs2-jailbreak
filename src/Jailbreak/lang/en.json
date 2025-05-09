@@ -2,16 +2,16 @@
   "warden.warden_prefix": "{green}[Warden]: {white}",
   "warden.door_prefix": "{green}[Door]: {white}",
   "warden.team_prefix": "{green}[Team]: {white}",
+  "jailbreak.game_prefix": "{green}[Jailbreak]: {white}",
   "lr.lr_prefix": "{green}[LR]: {white}",
   "sd.sd_prefix": "{green}[Special Day]: {white}",
   "mute.mute_prefix": "{green}[Mute]: {white}",
+  "queue.queue_prefix": "{blue}[Queue]: {white}",
+  "mute.muted": "You have not been unmuted, you cannot speak",
   "warday.warday_prefix": "{green}[Warday]: {white}",
   "rebel.rebel_prefix": "{green}[Rebel]: {white}",
-        
   "jail.kill_cmd": "{0} slayed themself",
-
   "warden.remove": "Warden Removed",
-
   "warden.warden_req_alive": "You must be alive to warden",
   "warden.warden_req_ct": "You must be a CT to warden",
   "warden.warden_taken": "{0} is already the warden",
@@ -21,85 +21,67 @@
   "warden.wub_restrict": "You must be the warden to use wub",
   "warden.wb_restrict": "You must be the warden to use wb",
   "warden.guard_swap": "Swapped: {0}",
+  "warden.guard_swap_failed_banned": "Cannot swap {0} to CT: Player is CT banned",
   "warden.took_warden": "{0} is now the warden",
   "warden.wcommand": "Type !wcommands to see a full list of warden commands",
   "warden.removed": "{0} is no longer the warden",
   "warden.ct_gun_menu": "You must be a ct to use the gun menu!",
+  "warden.guard_swapped": "{0} has been swapped to CT",
   "warden.gun_menu_disabled": "Gun menu is disabled!",
   "warden.no_warden": "There is no warden",
   "warden.time": "Warden has been active for {0} minutes",
-  "warden.fire_guard" : "Firing guards",
-
+  "warden.fire_guard": "Firing guards",
   "warden.give_pardon": "{0} has been pardoned",
   "warden.give_freeday": "{0} has been given a freeday",
-
   "warden.countdown_usage": "!countdown: <time> <msg>",
   "warden.countdown_restrict": "You must be the warden to call a countdown",
   "warden.countdown_abort": "Warden aborted the countdown",
   "warden.countdown_max_delay": "The maximum time is 200 seconds!",
-
   "logs.ct": "CT",
   "logs.t": "T",
-
   "role.warden": "Warden",
   "role.guard": "Guard",
   "role.prisoner": "Prisoner",
   "role.rebel": "Rebel",
   "role.spectator": "Spectator",
   "role.unknown": "Unknown",
-
   "logs.format.damage": "{0} ({1}) damaged {2} ({3}) for {4} damage",
   "logs.format.damage_self": "The world damaged {0} ({1}) for {2} damage",
   "logs.format.kill": "{0} ({1}) killed {2} ({3})",
   "logs.format.kill_self": "The world killed {0} ({1})",
   "logs.format.button": "{0} ({1}) pressed button {2}->{3}",
   "logs.format.grenade": "{0} ({1}) threw a {2}",
-
   "mute.thirty": "All t's are muted for the first 30 seconds",
   "mute.speak_quietly": "T's may now speak quietly",
   "mute.end_round": "You are muted until the end of the round",
-
   "warday.live": "Weapons live!",
   "warday.location": "warday at {0}",
-
   "rebel.kill": "{0} killed the rebel {1}",
-    
   "block.enable": "Block enabled",
   "block.disable": "Block disabled",
-    
   "sd.fight": "Fight",
   "sd.damage_enable": "Please wait {0} seconds for damage be enabled",
   "sd.dodgeball_start": "Dodgeball started",
   "sd.dodgeball_end": "Dodgeball end",
-    
-    
   "specialday start": "{0} has started!",
   "specialday end": "{0} has ended!",
-
   "sd.ffd_enable": "Friendly fire enabled",
-
   "sd.t_hide": "T's have {0} seconds to hide",
   "sd.seeker_release": "Seekers released",
   "sd.hide_start": "Hide and seek started",
   "sd.hide_end": "Hide and seek is over",
-
   "sd.spectre": "{0} is the spectre!",
-
   "sd.tank": "{0} is the tank!",
-
   "sd.gun_game_win": "{0} won gun game",
   "sd.gun_game_level": "Current level {0}: {1}",
-    
   "sd.patient_zero": "{0} is patient zero!",
   "sd.last_man_standing": "{0} is the last man standing!",
-
-
   "lr.rebel_last": "You must be the last player alive to rebel",
   "lr.riot_start": "A riot has started! CT's have 15 seconds to hide",
   "lr.riot_active": "Riot active",
   "lr.cancel": "LR cancelled",
   "lr.cancel_admin": "You must be an admin or the warden to cancel lr",
-  "lr.alive":  "You must be alive to start an lr",
+  "lr.alive": "You must be alive to start an lr",
   "lr.in_lr": "You are already in an lr",
   "lr.req_t": "You must be on T to start an lr",
   "lr.req_ct": "Your partner is not a CT",
@@ -109,5 +91,25 @@
   "lr.knife_rebel": "{0} is knife a rebel!",
   "lr.ready": "Last request is available! Type !lr",
   "lr.wait": "Please wait 15 seconds into the round before starting an lr",
-  "lr.rebel_cant_lr": "Rebels cannot lr please ask the warden for a pardon"
+  "lr.rebel_cant_lr": "Rebels cannot lr please ask the warden for a pardon",
+  "queue.already_ct": "You are already on the CT team.",
+  "queue.already_in_queue": "You are already in the queue.",
+  "queue.joined": "You have joined the CT queue. Position: {0}",
+  "queue.processing_immediately": "No CTs on the server. Processing queue immediately!",
+  "queue.moved_next_round": "You will be moved to CT at the start of the next round!",
+  "queue.slots_available": "There are currently {0} CT slots available. You'll be moved at the start of the next round if slots remain.",
+  "queue.no_slots": "No CT slots available right now. You'll be moved when a slot opens at the start of the next round.",
+  "queue.not_in_queue": "You are not in the queue.",
+  "queue.left": "You have left the CT queue.",
+  "queue.empty": "The CT queue is currently empty.",
+  "queue.current": "Current CT queue:",
+  "queue.position_entry": "{0}. {1}",
+  "queue.position_update": "Your position in the CT queue is now: {0}",
+  "queue.moved_to_ct": "{0} has been moved to the CT team from the queue.",
+  "queue.muted_cannot_join": "You cannot join CT or queue for CT while you are muted by an admin.",
+  "queue.added_to_front": "You have been added to the front of the CT queue.",
+  "jailbreak.moved_to_t_balance": "{0} has been moved to T team for team balance.",
+  "jailbreak.team_rebalanced": "{0} players moved from CT to T for team balance.",
+  "jailbreak.respawned_after_rebalance": "You have been respawned after team rebalance.",
+  "jailbreak.ct_team_empty": "CT team is now empty! Ending the round..."
 }

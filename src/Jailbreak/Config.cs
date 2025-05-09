@@ -66,6 +66,19 @@ public class CTConfig
     public bool Armor { get; set; } = true;
     public bool VoiceOnly { get; set; } = false;
 
+    public class CTQueueConfig
+    {
+        public bool Enabled { get; set; } = true;
+        public class QueueCommands
+        {
+            public string Join { get; set; } = "ctqueue,joinqueue,ct";
+            public string Leave { get; set; } = "leavequeue";
+            public string List { get; set; } = "listqueue,queuelist,queue";
+        }
+        public QueueCommands Commands { get; set; } = new QueueCommands();
+    }
+    public CTQueueConfig Queue { get; set; } = new CTQueueConfig();
+
     public class WardenConfig
     {
         public class WardenCommands

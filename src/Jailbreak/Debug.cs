@@ -1,4 +1,3 @@
-
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -12,7 +11,7 @@ public static class Debug
     [RequiresPermissions("@jail/debug")]
     public static void Nuke(CCSPlayerController? invoke, CommandInfo command)
     {
-        Chat.Announce(DEBUG_PREFIX,"Slaying all players");
+        Chat.Announce(DEBUG_PREFIX, "Slaying all players");
 
         Chat.PrintConsoleAll("Nuke!");
 
@@ -28,10 +27,10 @@ public static class Debug
         {
             Circle marker = new Circle();
 
-            marker.Draw(30.0f,72.0f,pawn.AbsOrigin, System.Drawing.Color.Fuchsia);
+            marker.Draw(30.0f, 72.0f, pawn.AbsOrigin, System.Drawing.Color.Fuchsia);
         }
     }
-    
+
     // block   0b000000000001011000011000000010001
     // noblock 0b100000000001011000011000000010001;
 
@@ -51,7 +50,7 @@ public static class Debug
                 continue;
 
             // TODO
-        }      
+        }
     }
 
     [RequiresPermissions("@jail/debug")]
@@ -64,7 +63,15 @@ public static class Debug
     public static void JoinCtCmd(CCSPlayerController? invoke, CommandInfo command)
     {
         if (invoke != null && invoke.IsLegal())
+        {
             invoke.SwitchTeam(CsTeam.CounterTerrorist);
+
+            // Track when this player joined CT
+            if (JB.JailPlugin.warden.ctQueue != null)
+            {
+                JB.JailPlugin.warden.ctQueue.TrackCTJoin(invoke);
+            }
+        }
     }
 
     [RequiresPermissions("@jail/debug")]
@@ -119,5 +126,5 @@ public static class Debug
     // are these commands allowed or not?
     public static readonly bool enable = true;
 
-    public static readonly String DEBUG_PREFIX = $" {ChatColors.Green}[DEBUG]: {ChatColors.White}";    
+    public static readonly String DEBUG_PREFIX = $" {ChatColors.Green}[DEBUG]: {ChatColors.White}";
 }

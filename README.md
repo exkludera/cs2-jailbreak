@@ -1,83 +1,104 @@
-> [!NOTE]
-> **changes**
-> * updated configs
-> * updated commands
-> * made noblock toggle instead of commands for on and off
-> * made force open & close doors into one command so it toggles, instead of two commands
-> * removed lang lines for warden commands and made a file to store all info (wardencommands.txt)
-> * removed repeating lang lines for special day start and end, made all use the same localizer
-> * cleaned up code
-> * read commits for other changes
+# Jailbreak
+Often used with [CTBans](https://github.com/playpark/cs2-ctbans)
+
+![CS2](https://img.shields.io/badge/Game-CS2-orange)
+![CounterStrikeSharp](https://img.shields.io/badge/API-CounterStrikeSharp-blue)
+
+### Core Features
+- **Warden System**: Complete warden management with commands, laser pointer, and team control
+- **Last Request (LR)**: Multiple LR types with stats tracking via SQL
+- **Special Days**: Various special day events to keep gameplay fresh
+- **Team Management**: CT queue system, team ratio enforcement, and swap functionality
+- **Admin Controls**: Comprehensive admin commands for server management
+- **CT Queue**: Queue system for CTs to join the game
+- **CT Ban Integration**: Integration with CT Bans for banning CTs from the queue
+
+## Installation
+
+1. Download the latest release from the [releases tab](https://github.com/playpark/cs2-jailbreak/releases)
+2. Extract the plugin into your CounterStrikeSharp plugins folder
+3. Configure the plugin settings in `configs/plugins/Cs2Jailbreak/`
+
+### Database Setup (Optional)
+For LR stats tracking:
+1. Create a MySQL database
+2. Configure database credentials in the plugin config file
 
 > [!IMPORTANT]
-> FORK FROM [destoer/Cs2Jailbreak](https://github.com/destoer/Cs2Jailbreak)
+> This plugin is optimized for Linux servers. Windows support is limited with some features disabled.
 
-<img src="https://github.com/user-attachments/assets/53e486cc-8da4-45ab-bc6e-eb38145aba36" height="200px"> <br>
+## Commands
 
-<br> <a href="https://ko-fi.com/exkludera" target="blank"><img src="https://cdn.ko-fi.com/cdn/kofi5.png" height="48px" alt="Buy Me a Coffee at ko-fi.com"></a>
+### Player Commands
+- `!w` - Become warden
+- `!uw` - Leave warden position
+- `!wb` - Toggle block status
+- `!color` - Set prisoner color
+- `!laser_color` - Set laser color
+- `!marker_color` - Set marker color
+- `!lr` - Start a last request
+- `!ctqueue` or `!ct` - Join CT queue
+- `!leavequeue` - Leave CT queue
+- `!listqueue` - View current queue
 
-### old readme below
+### Warden Commands
+- `!wd` - Start a warday
+- `!swap_guard <player>` - Swap a T to CT
+- `!wsd` - Call a warden special day
+- `!give_pardon` - Pardon a rebel
+- `!give_freeday` - Give a T a freeday
+- `!countdown` - Start a countdown
+- `!countdown_abort` - Abort current countdown
+- `!force_open` - Toggle doors
 
-<hr>
+### Admin Commands
+- `!rw` - Remove current warden
+- `!swapguard` - Force swap a player to guard
+- `!fire_guard` - Remove a player from guard
+- `!sd` - Start a special day
+- `!sd_ff` - Start a friendly fire special day
+- `!sd_cancel` - Cancel current special day
+- `!logs` - View warden logs
 
-# Cs2Jailbreak
-WIP Jailbreak plugin for CS2 using counterstrikesharp expect bugs
+Admin commands require `@css/generic` permission.
+Debug commands require `@jail/debug` permission.
 
-rewrite of CSS plugin https://github.com/destoer/counter_strike_jailbreak 
+## Available Special Days
+- Dodgeball
+- Friendly Fire
+- Grenade
+- Gun Game
+- Headshot Only
+- Hide and Seek
+- Juggernaut
+- Knife
+- Scout Knife
+- Spectre
+- Tank
+- Zombie
+- And more!
 
-admin commands locked under @css/generic 
+## Last Request Types
+- Knife Fight
+- Gun Toss
+- Dodgeball
+- No Scope
+- War
+- Grenade
+- Russian Roulette
+- Scout Knife
+- Headshot Only
+- Shot for Shot
+- Rebel (Free Kill)
 
-debug commands locked under @jail/debug
+## API Usage
+For developers interested in integrating with this plugin, see [JailServiceTest](https://github.com/destoer/JailServiceTest) for example API usage.
 
+## Recommended Plugins
+- [CT Bans](https://github.com/playpark/cs2-ctbans)
 
-# Info
-For further config and feature info please see the wiki
+## License
+This project is licensed under the terms of the included LICENSE file.
 
-https://github.com/destoer/Cs2Jailbreak/wiki
-
-also please see https://github.com/destoer/JailServiceTest for example API usage
-
-# Installation
-Download the latest release from the releases tab and copy it into the counterstrikesharp plugin folder
-
-If you wan't saved LR stats please create a SQL database with a name of your choice and setup the credentials in
-configs/plugins/Cs2Jailbreak
-
-NOTE: this plugin only operates correctly on linux
-
-windows has a couple of places where a !IsWindows() check wraps buggy code
-namely OnTakeDamage
-
-# Warden TODO
-T laser 
-
-Auto unstuck 
-
-Handicap 
-
-Warden Ring 
-
-# LR TODO
-Port crash, sumo 
-
-Improve anti cheat
-
-Add beacons 
-
-
-# SD TODO
-waiting on trace for laser wars
-
-Zombie, Laser wars
-
-
-# Useful thirdparty plugins for jailbreak
-
-CT Bans
-https://github.com/DeadSwimek/cs2-ctban
-
-Call admin
-https://github.com/1Mack/CS2-CallAdmin
-
-Roll the dice
-https://github.com/Quantor97/CS2-RollTheDice-Plugin
+## Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.

@@ -1,4 +1,3 @@
-
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using System.Drawing;
@@ -49,28 +48,36 @@ public partial class Warden
         */
     }
 
-    public void TakeDamage(CCSPlayerController? victim,CCSPlayerController? attacker, ref float damage)
+    public void TakeDamage(CCSPlayerController? victim, CCSPlayerController? attacker, ref float damage)
     {
         // TODO: cant figure out how to get current player weapon
-    /*
-        if(!victim.IsLegalAlive() && !attacker.IsLegalAlive())
-        {
-            String weapon = 
-
-            // if ct handicap is active rescale knife and awp damage to be unaffected
-            if(ctHandicap && victim.IsCt() && attacker.IsT() && !InLR(attacker) && (weapon.Contains("knife") || weapon.Contains("awp")))
+        /*
+            if(!victim.IsLegalAlive() && !attacker.IsLegalAlive())
             {
-                damage = damage * 1.3;
+                String weapon = 
+
+                // if ct handicap is active rescale knife and awp damage to be unaffected
+                if(ctHandicap && victim.IsCt() && attacker.IsT() && !InLR(attacker) && (weapon.Contains("knife") || weapon.Contains("awp")))
+                {
+                    damage = damage * 1.3;
+                }
             }
-        }
-    */
+        */
     }
 
     public void RoundEnd()
     {
-        mute.RoundEnd();
-        warday.RoundEnd();
-        PurgeRound();
+        RemoveLaser();
+
+        if (Config.Guard.Warden.ForceRemoval)
+            RemoveWardenInternal();
+
+        // reset player structs
+        foreach (JailPlayer jailPlayer in jailPlayers)
+            jailPlayer.PurgeRound();
+
+        // Process CT queue at round end
+        ctQueue.RoundEnd();
     }
 
 
@@ -85,6 +92,9 @@ public partial class Warden
     public void Disconnect(CCSPlayerController? player)
     {
         RemoveIfWarden(player);
+
+        // Remove player from CT queue if they disconnect
+        ctQueue.PlayerDisconnect(player);
     }
 
     public void MapStart()
@@ -116,12 +126,15 @@ public partial class Warden
         SetupPlayerGuns(player);
 
         mute.Spawn(player);
-    }   
+    }
 
-    public void SwitchTeam(CCSPlayerController? player,int new_team)
+    public void SwitchTeam(CCSPlayerController? player, int new_team)
     {
         RemoveIfWarden(player);
-        mute.SwitchTeam(player,new_team);
+        mute.SwitchTeam(player, new_team);
+
+        // Update CT queue when player changes team
+        ctQueue.TeamChange(player);
     }
 
     public void Death(CCSPlayerController? player, CCSPlayerController? killer)
@@ -143,20 +156,20 @@ public partial class Warden
 
         if (jailPlayer != null)
         {
-            jailPlayer.RebelDeath(player,killer);
-            jailPlayer.FreedayDeath(player,killer);
+            jailPlayer.RebelDeath(player, killer);
+            jailPlayer.FreedayDeath(player, killer);
         }
         // if a t dies we dont need to regive the warden
         if (player.IsCt())
             SetWardenIfLast(true);
     }
 
-    public void PlayerHurt(CCSPlayerController? player, CCSPlayerController? attacker, int damage,int health)
+    public void PlayerHurt(CCSPlayerController? player, CCSPlayerController? attacker, int damage, int health)
     {
         var attackerJailPlayer = JailPlayerFromPlayer(attacker);
 
         if (attackerJailPlayer != null)
-            attackerJailPlayer.PlayerHurt(player,attacker,damage, health);
+            attackerJailPlayer.PlayerHurt(player, attacker, damage, health);
     }
 
     public void WeaponFire(CCSPlayerController? player, String name)
@@ -165,6 +178,6 @@ public partial class Warden
         var jailPlayer = JailPlayerFromPlayer(player);
 
         if (jailPlayer != null)
-            jailPlayer.RebelWeaponFire(player,name);
+            jailPlayer.RebelWeaponFire(player, name);
     }
 }

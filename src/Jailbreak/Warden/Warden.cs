@@ -14,6 +14,9 @@ public partial class Warden
     {
         for (int p = 0; p < jailPlayers.Length; p++)
             jailPlayers[p] = new JailPlayer();
+
+        // Initialize CTQueue
+        ctQueue = new CTQueue();
     }
 
     public void SetWarden(int slot)
@@ -105,7 +108,7 @@ public partial class Warden
         {
             Server.PrintToChatAll($"{WARDEN_PREFIX} {player.PlayerName}: {text}");
             return false;
-        }   
+        }
 
         return true;
     }
@@ -115,11 +118,11 @@ public partial class Warden
     {
         RemoveLaser();
 
-        if(Config.Guard.Warden.ForceRemoval)
+        if (Config.Guard.Warden.ForceRemoval)
             RemoveWardenInternal();
 
         // reset player structs
-        foreach(JailPlayer jailPlayer in jailPlayers)
+        foreach (JailPlayer jailPlayer in jailPlayers)
             jailPlayer.PurgeRound();
     }
 
@@ -148,7 +151,7 @@ public partial class Warden
                 if (player.IsLegalAlive())
                     player.SetHealth(150);
             }
-        
+
             SetWarden(slot);
         }
     }
@@ -177,7 +180,7 @@ public partial class Warden
 
             if (Config.Guard.Armor)
                 player.GiveArmor();
-        } 
+        }
     }
 
     // util func to get a jail player
@@ -188,7 +191,7 @@ public partial class Warden
 
         return jailPlayers[player.Slot];
     }
-    
+
     public CCSPlayerController? GetWarden()
     {
         if (wardenSlot == INAVLID_SLOT)
@@ -221,10 +224,10 @@ public partial class Warden
     CSTimer.Timer? tmpMuteTimer = null;
     long tmpMuteTimestamp = 0;
 
-    const int INAVLID_SLOT = -3;   
+    const int INAVLID_SLOT = -3;
 
     int wardenSlot = INAVLID_SLOT;
-    
+
     public static String WARDEN_PREFIX = $" {ChatColors.Green}[WARDEN]: {ChatColors.White}";
 
     long wardenTimestamp = -1;
@@ -241,4 +244,6 @@ public partial class Warden
     public Warday warday = new Warday();
     public Block block = new Block();
     public Mute mute = new Mute();
+
+    public CTQueue ctQueue = new CTQueue();
 };

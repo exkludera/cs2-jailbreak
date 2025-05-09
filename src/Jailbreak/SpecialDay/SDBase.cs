@@ -54,17 +54,17 @@ public abstract class SDBase
         {
             var player = rigged;
             riggedSlot = -1;
-            return (player,valid.Count);
+            return (player, valid.Count);
         }
 
         // pick one back at random
         Random rnd = new Random((int)DateTime.Now.Ticks);
 
-        int boss = rnd.Next(0,valid.Count);
+        int boss = rnd.Next(0, valid.Count);
 
         bossSlot = valid[boss].Slot;
 
-        return (valid[boss],valid.Count);
+        return (valid[boss], valid.Count);
     }
 
     public void Disconnect(CCSPlayerController? player)
@@ -77,7 +77,7 @@ public abstract class SDBase
         {
             (CCSPlayerController boss, int count) = PickBoss();
 
-            MakeBoss(boss,count);
+            MakeBoss(boss, count);
         }
     }
 
@@ -110,21 +110,21 @@ public abstract class SDBase
         return player.Slot == bossSlot;
     }
 
-    public virtual bool WeaponEquip(CCSPlayerController player, String name) 
+    public virtual bool WeaponEquip(CCSPlayerController player, String name)
     {
-        return weaponRestrict == "" || name.Contains(weaponRestrict); 
+        return weaponRestrict == "" || name.Contains(weaponRestrict);
     }
 
-    public virtual void PlayerHurt(CCSPlayerController? player,CCSPlayerController? attacker,int health,int damage, int hitgroup) {}
+    public virtual void PlayerHurt(CCSPlayerController? player, CCSPlayerController? attacker, int health, int damage, int hitgroup) { }
 
-    public virtual void EntCreated(CEntityInstance entity) {}
-    public virtual void GrenadeThrown(CCSPlayerController? player) {}
+    public virtual void EntCreated(CEntityInstance entity) { }
+    public virtual void GrenadeThrown(CCSPlayerController? player) { }
 
-    public virtual void Death(CCSPlayerController? player, CCSPlayerController? attacker, String weapon) {}
+    public virtual void Death(CCSPlayerController? player, CCSPlayerController? attacker, String weapon) { }
 
     public abstract void SetupPlayer(CCSPlayerController player);
 
-    public virtual void CleanupPlayer(CCSPlayerController player) {}
+    public virtual void CleanupPlayer(CCSPlayerController player) { }
 
     public void SetupPlayers()
     {
@@ -134,7 +134,7 @@ public abstract class SDBase
             player.SetColour(Player.DEFAULT_COLOUR);
 
             SetupPlayer(player);
-        }       
+        }
     }
 
     public void CleanupPlayers()
@@ -143,15 +143,15 @@ public abstract class SDBase
         {
             player.StripWeapons();
             CleanupPlayer(player);
-        }       
+        }
     }
 
     public void LocalizeAnnounce(String name, params Object[] args)
     {
-        Chat.LocalizeAnnounce(SpecialDay.SPECIALDAY_PREFIX,name,args);
+        Chat.LocalizeAnnounce(SpecialDay.SPECIALDAY_PREFIX, name, args);
     }
 
-    public void ResurectPlayer(CCSPlayerController player,float delay)
+    public void ResurectPlayer(CCSPlayerController player, float delay)
     {
         int victimSlot = player.Slot;
 
@@ -161,16 +161,16 @@ public abstract class SDBase
             if (target.IsLegal())
                 target.Respawn();
 
-        },CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
+        }, CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
 
-        JB.JailPlugin.globalCtx.AddTimer(delay + 0.5f,() =>
+        JB.JailPlugin.globalCtx.AddTimer(delay + 0.5f, () =>
         {
             CCSPlayerController? target = Utilities.GetPlayerFromSlot(victimSlot);
 
             if (state == SDState.ACTIVE && target.IsLegalAlive())
                 SetupPlayer(target);
 
-        },CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
+        }, CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
     }
 
     public int bossSlot = -1;

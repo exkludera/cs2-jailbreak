@@ -17,7 +17,7 @@ public static class Lib
     }
 
     static public void InvokePlayerMenu(CCSPlayerController? invoke, String name,
-        Action<CCSPlayerController, ChatMenuOption> callback, Func<CCSPlayerController?,bool> filter)
+        Action<CCSPlayerController, ChatMenuOption> callback, Func<CCSPlayerController?, bool> filter)
     {
         if (!invoke.IsLegal())
             return;
@@ -33,7 +33,7 @@ public static class Lib
         MenuManager.OpenChatMenu(invoke, menu);
     }
 
-    public static void ColourMenu(CCSPlayerController? player,Action<CCSPlayerController, ChatMenuOption> callback, String name)
+    public static void ColourMenu(CCSPlayerController? player, Action<CCSPlayerController, ChatMenuOption> callback, String name)
     {
         if (!player.IsLegal())
             return;
@@ -43,7 +43,7 @@ public static class Lib
         foreach (var item in Lib.COLOUR_CONFIG_MAP)
             colourMenu.AddMenuOption(item.Key, callback);
 
-        MenuManager.OpenChatMenu(player, colourMenu);    
+        MenuManager.OpenChatMenu(player, colourMenu);
     }
 
     static public void PlaySoundAll(String sound)
@@ -74,8 +74,22 @@ public static class Lib
     {
         foreach (CCSPlayerController player in Lib.GetPlayers())
         {
-            if (player.IsLegalAlive() || roundEnd)
-                player.UnMute();
+            if (JailPlugin.globalCtx?.SimpleAdminEnabled == true && JailPlugin.globalCtx._SimpleAdminsharedApi != null)
+            {
+                var muteStatus = JailPlugin.globalCtx._SimpleAdminsharedApi.GetPlayerMuteStatus(player);
+                if (muteStatus?.Count == 0)
+                {
+                    if (player.IsLegalAlive() || roundEnd)
+                        player.UnMute();
+                }
+                else
+                {
+                    var muted_str = Chat.Localize("mute.muted");
+                    var muted_prefix = Chat.Localize("mute.mute_prefix");
+                    player.PrintToChat(muted_prefix + muted_str);
+                }
+            }
+
         }
     }
 
@@ -105,7 +119,15 @@ public static class Lib
     static public void SwapAllCT()
     {
         foreach (var player in GetAlivePlayers())
+        {
             player.SwitchTeam(CsTeam.CounterTerrorist);
+
+            // Track when this player joined CT
+            if (JB.JailPlugin.warden.ctQueue != null)
+            {
+                JB.JailPlugin.warden.ctQueue.TrackCTJoin(player);
+            }
+        }
     }
 
     static public void RespawnPlayers()
@@ -135,13 +157,13 @@ public static class Lib
     static public List<CCSPlayerController> GetAlivePlayers()
     {
         List<CCSPlayerController> players = Utilities.GetPlayers();
-        return players.FindAll(player => player.IsLegalAlive());      
+        return players.FindAll(player => player.IsLegalAlive());
     }
 
     static public List<CCSPlayerController> GetPlayers()
     {
         List<CCSPlayerController> players = Utilities.GetPlayers();
-        return players.FindAll(player => player.IsLegal() && player.IsConnected());      
+        return players.FindAll(player => player.IsLegal() && player.IsConnected());
     }
 
     static public List<CCSPlayerController> GetAliveCt()
@@ -153,13 +175,13 @@ public static class Lib
     static public int CtCount()
     {
         List<CCSPlayerController> players = Lib.GetPlayers();
-        return players.FindAll(player => player.IsLegal() && player.IsCt()).Count;        
+        return players.FindAll(player => player.IsLegal() && player.IsCt()).Count;
     }
 
     static public int TCount()
     {
         List<CCSPlayerController> players = Lib.GetPlayers();
-        return players.FindAll(player => player.IsLegal() && player.IsT()).Count;        
+        return players.FindAll(player => player.IsLegal() && player.IsT()).Count;
     }
 
     static public int AliveCtCount()
@@ -170,13 +192,13 @@ public static class Lib
     static public List<CCSPlayerController> GetAliveT()
     {
         List<CCSPlayerController> players = Lib.GetPlayers();
-        return players.FindAll(player => player.IsLegalAlive() && player.IsT());;
+        return players.FindAll(player => player.IsLegalAlive() && player.IsT()); ;
     }
 
     static public List<CCSPlayerController> GetActivePlayers()
     {
         List<CCSPlayerController> players = Lib.GetPlayers();
-        return players.FindAll(player => player.IsT() || player.IsCt());;
+        return players.FindAll(player => player.IsT() || player.IsCt()); ;
     }
 
     static public int AliveTCount()
@@ -204,11 +226,11 @@ public static class Lib
             blockCvar.SetValue(0);
     }
 
-    
+
     static public void SetCvarStr(String name, String value)
     {
         // why doesn't this work lol
-        
+
         ConVar? cvar = ConVar.Find(name);
 
         if (cvar != null)
@@ -231,9 +253,9 @@ public static class Lib
     public static readonly Color CYAN = Color.FromArgb(255, 153, 255, 255);
     public static readonly Color RED = Color.FromArgb(255, 255, 0, 0);
     public static readonly Color INVIS = Color.FromArgb(0, 255, 255, 255);
-    public static readonly Color GREEN = Color.FromArgb(255,0, 191, 0);
+    public static readonly Color GREEN = Color.FromArgb(255, 0, 191, 0);
 
-    public static readonly Dictionary<string,Color> COLOUR_CONFIG_MAP = new Dictionary<string,Color>()
+    public static readonly Dictionary<string, Color> COLOUR_CONFIG_MAP = new Dictionary<string, Color>()
     {
         {"White",Lib.WHITE}, // white
         {"Cyan",Lib.CYAN}, // cyan
@@ -245,8 +267,8 @@ public static class Lib
         {"Yellow",Color.FromArgb(255,255, 255, 0)} // yellow
     };
 
-    public static readonly Vector VEC_ZERO = new Vector(0.0f,0.0f,0.0f);
-    public static readonly QAngle ANGLE_ZERO = new QAngle(0.0f,0.0f,0.0f);
+    public static readonly Vector VEC_ZERO = new Vector(0.0f, 0.0f, 0.0f);
+    public static readonly QAngle ANGLE_ZERO = new QAngle(0.0f, 0.0f, 0.0f);
 
     static ConVar? blockCvar = ConVar.Find("mp_solid_teammates");
     static ConVar? ff = ConVar.Find("mp_teammates_are_enemies");

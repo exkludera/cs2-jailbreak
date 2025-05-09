@@ -1,4 +1,3 @@
-
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -34,17 +33,17 @@ public partial class SpecialDay
             // restore all players if from a cancel
             if (forced)
             {
-                foreach(CCSPlayerController player in JB.Lib.GetAliveCt())
+                foreach (CCSPlayerController player in JB.Lib.GetAliveCt())
                 {
                     player.GiveWeapon("m4a1");
                     player.GiveWeapon("deagle");
                 }
 
-                Chat.Announce(SPECIALDAY_PREFIX,"Special day cancelled");
-            }  
+                Chat.Announce(SPECIALDAY_PREFIX, "Special day cancelled");
+            }
 
             teamSave.Restore();
-        }     
+        }
     }
 
     public void SetupSD(CCSPlayerController? invoke, ChatMenuOption option)
@@ -54,7 +53,7 @@ public partial class SpecialDay
 
         if (activeSD != null)
         {
-            invoke.Announce(SPECIALDAY_PREFIX,"You cannot call two SD's at once");
+            invoke.Announce(SPECIALDAY_PREFIX, "You cannot call two SD's at once");
             return;
         }
 
@@ -68,100 +67,100 @@ public partial class SpecialDay
         switch (name)
         {
             case "Friendly fire":
-            {
-                activeSD = new SDFriendlyFire();
-                type = SDType.FRIENDLY_FIRE;
-                CurrentSpecialDay = "Friendly fire";
-                break;
-            }
+                {
+                    activeSD = new SDFriendlyFire();
+                    type = SDType.FRIENDLY_FIRE;
+                    CurrentSpecialDay = "Friendly fire";
+                    break;
+                }
 
             case "Juggernaut":
-            {
-                activeSD = new SDJuggernaut();
-                type = SDType.JUGGERNAUT;
-                CurrentSpecialDay = "Juggernaut";
-                break;             
-            }
+                {
+                    activeSD = new SDJuggernaut();
+                    type = SDType.JUGGERNAUT;
+                    CurrentSpecialDay = "Juggernaut";
+                    break;
+                }
 
             case "Tank":
-            {
-                activeSD = new SDTank();
-                type = SDType.TANK;
-                CurrentSpecialDay = "Tank";
-                break;                          
-            }
+                {
+                    activeSD = new SDTank();
+                    type = SDType.TANK;
+                    CurrentSpecialDay = "Tank";
+                    break;
+                }
 
             case "Scout knife":
-            {
-                activeSD = new SDScoutKnife();
-                type = SDType.SCOUT_KNIFE;
-                CurrentSpecialDay = "Scout knife";
-                break;
-            }
+                {
+                    activeSD = new SDScoutKnife();
+                    type = SDType.SCOUT_KNIFE;
+                    CurrentSpecialDay = "Scout knife";
+                    break;
+                }
 
             case "Headshot only":
-            {
-                activeSD = new SDHeadshotOnly();
-                type = SDType.HEADSHOT_ONLY;
-                CurrentSpecialDay = "Headshot only";
-                break;             
-            }
+                {
+                    activeSD = new SDHeadshotOnly();
+                    type = SDType.HEADSHOT_ONLY;
+                    CurrentSpecialDay = "Headshot only";
+                    break;
+                }
 
             case "Knife warday":
-            {
-                activeSD = new SDKnifeWarday();
-                type = SDType.KNIFE_WARDAY;
-                CurrentSpecialDay = "Knife warday";
-                break;             
-            }
+                {
+                    activeSD = new SDKnifeWarday();
+                    type = SDType.KNIFE_WARDAY;
+                    CurrentSpecialDay = "Knife warday";
+                    break;
+                }
 
             case "Hide and seek":
-            {
-                activeSD = new SDHideAndSeek();
-                type = SDType.HIDE_AND_SEEK;
-                CurrentSpecialDay = "Hide and seek";
-                break;               
-            }
+                {
+                    activeSD = new SDHideAndSeek();
+                    type = SDType.HIDE_AND_SEEK;
+                    CurrentSpecialDay = "Hide and seek";
+                    break;
+                }
 
             case "Dodgeball":
-            {
-                activeSD = new SDDodgeball();
-                type = SDType.DODGEBALL;
-                CurrentSpecialDay = "Dodgeball";
-                break;             
-            }
+                {
+                    activeSD = new SDDodgeball();
+                    type = SDType.DODGEBALL;
+                    CurrentSpecialDay = "Dodgeball";
+                    break;
+                }
 
             case "Spectre":
-            {
-                activeSD = new SDSpectre();
-                type = SDType.SPECTRE;
-                CurrentSpecialDay = "Spectre";
-                break;                            
-            }
+                {
+                    activeSD = new SDSpectre();
+                    type = SDType.SPECTRE;
+                    CurrentSpecialDay = "Spectre";
+                    break;
+                }
 
             case "Grenade":
-            {
-                activeSD = new SDGrenade();
-                type = SDType.GRENADE;
-                CurrentSpecialDay = "Grenade";
-                break;             
-            }
+                {
+                    activeSD = new SDGrenade();
+                    type = SDType.GRENADE;
+                    CurrentSpecialDay = "Grenade";
+                    break;
+                }
 
             case "Gun game":
-            {
-                activeSD = new SDGunGame();
-                type = SDType.GUN_GAME;
-                CurrentSpecialDay = "Gun game";
-                break;                
-            }
+                {
+                    activeSD = new SDGunGame();
+                    type = SDType.GUN_GAME;
+                    CurrentSpecialDay = "Gun game";
+                    break;
+                }
 
             case "Zombie":
-            {
-                activeSD = new SDZombie();
-                type = SDType.ZOMBIE;
-                CurrentSpecialDay = "Zombie";
-                break;                
-            }
+                {
+                    activeSD = new SDZombie();
+                    type = SDType.ZOMBIE;
+                    CurrentSpecialDay = "Zombie";
+                    break;
+                }
         }
 
         // 1up dead players
@@ -180,7 +179,7 @@ public partial class SpecialDay
             activeSD.SetupCommon();
 
             // start the countdown for enable
-            countdown.Start($"{name} starts in",delay,0,null,StartSD);
+            countdown.Start($"{name} starts in", delay, 0, null, StartSD);
         }
     }
 
@@ -191,12 +190,12 @@ public partial class SpecialDay
             // force ff active
             if (overrideFF)
             {
-                Chat.LocalizeAnnounce(SPECIALDAY_PREFIX,"sd.ffd_enable");
+                Chat.LocalizeAnnounce(SPECIALDAY_PREFIX, "sd.ffd_enable");
                 Lib.EnableFriendlyFire();
             }
 
             activeSD.StartCommon();
-        }  
+        }
     }
 
     [RequiresPermissions("@css/generic")]
@@ -209,7 +208,7 @@ public partial class SpecialDay
     {
         if (!Config.SpecialDay.Enabled)
         {
-            player.Announce(SPECIALDAY_PREFIX,"Special day is disabled!");
+            player.Announce(SPECIALDAY_PREFIX, "Special day is disabled!");
             return;
         }
 
@@ -238,7 +237,7 @@ public partial class SpecialDay
 
 
     [RequiresPermissions("@jail/debug")]
-    public void SDRigCmd(CCSPlayerController? player,CommandInfo command)
+    public void SDRigCmd(CCSPlayerController? player, CommandInfo command)
     {
         if (!player.IsLegal())
         {
@@ -250,36 +249,44 @@ public partial class SpecialDay
             player.PrintToChat($"Rigged sd boss to {player.PlayerName}");
             activeSD.riggedSlot = player.Slot;
         }
-    }   
+    }
 
-    [RequiresPermissions("@css/generic")]
     public void SDCmd(CCSPlayerController? player)
     {
+        if (!player.IsGenericAdmin())
+        {
+            player.Announce(SPECIALDAY_PREFIX, "You must be an admin to use this command");
+            return;
+        }
         overrideFF = false;
         wsdCommand = false;
         SDCmdInternal(player);
-    }   
+    }
 
-    [RequiresPermissions("@css/generic")]
     public void SDFFCmd(CCSPlayerController? player)
     {
+        if (!player.IsGenericAdmin())
+        {
+            player.Announce(SPECIALDAY_PREFIX, "You must be an admin to use this command");
+            return;
+        }
         overrideFF = true;
         wsdCommand = false;
         SDCmdInternal(player);
-    }   
+    }
 
     public void WardenSDCmdInternal(CCSPlayerController? player)
     {
         if (!JailPlugin.IsWarden(player))
         {
-            player.Announce(SPECIALDAY_PREFIX,"You must be a warden to use this command");
+            player.Announce(SPECIALDAY_PREFIX, "You must be a warden to use this command");
             return;
         }
 
         // Not ready yet
         if (wsdRound < Config.SpecialDay.RoundsCooldown)
         {
-            player.Announce(SPECIALDAY_PREFIX,$"Please wait {Config.SpecialDay.RoundsCooldown - wsdRound} more rounds");
+            player.Announce(SPECIALDAY_PREFIX, $"Please wait {Config.SpecialDay.RoundsCooldown - wsdRound} more rounds");
             return;
         }
 
@@ -293,14 +300,14 @@ public partial class SpecialDay
         overrideFF = false;
 
         WardenSDCmdInternal(player);
-    }   
+    }
 
     public void WardenSDFFCmd(CCSPlayerController? player)
     {
         overrideFF = true;
 
         WardenSDCmdInternal(player);
-    }   
+    }
 
     public enum SDType
     {

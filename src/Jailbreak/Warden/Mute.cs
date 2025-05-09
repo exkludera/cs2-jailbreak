@@ -1,8 +1,9 @@
-
 // TODO: we want to just copy hooks from other plugin and name them in here
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using CSTimer = CounterStrikeSharp.API.Modules.Timers;
+using CS2_SimpleAdminApi;
+using System.Linq;
 
 public class Mute
 {
@@ -11,23 +12,38 @@ public class Mute
         if (Config.Prisoner.MuteAlways || !Config.Prisoner.ThirtySecMute)
             return;
 
-        Chat.LocalizeAnnounce(MUTE_PREFIX,"mute.thirty");
+        Chat.LocalizeAnnounce(MUTE_PREFIX, "mute.thirty");
 
         JB.Lib.MuteT();
 
-        if(JB.JailPlugin.globalCtx != null)
-            muteTimer = JB.JailPlugin.globalCtx.AddTimer(30.0f,UnMuteAll,CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
+        if (JB.JailPlugin.globalCtx != null)
+            muteTimer = JB.JailPlugin.globalCtx.AddTimer(30.0f, UnMuteAll, CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
 
         muteActive = true;
     }
 
     public void UnMuteAll()
     {
-        Chat.LocalizeAnnounce(MUTE_PREFIX,"mute.speak_quietly");
+        Chat.LocalizeAnnounce(MUTE_PREFIX, "mute.speak_quietly");
 
         // Go through and unmute all alive players!
-        foreach(CCSPlayerController player in JB.Lib.GetAlivePlayers())
-            player.UnMute();
+        foreach (CCSPlayerController player in JB.Lib.GetAlivePlayers())
+        {
+            if (JB.JailPlugin.globalCtx?.SimpleAdminEnabled == true && JB.JailPlugin.globalCtx._SimpleAdminsharedApi != null)
+            {
+                var muteStatus = JB.JailPlugin.globalCtx._SimpleAdminsharedApi.GetPlayerMuteStatus(player);
+                if (muteStatus?.Count == 0)
+                {
+                    player.UnMute();
+                }
+                else
+                {
+                    var muted_str = Chat.Localize("mute.muted");
+                    var muted_prefix = Chat.Localize("mute.mute_prefix");
+                    player.PrintToChat(muted_prefix + muted_str);
+                }
+            }
+        }
 
         muteTimer = null;
 
@@ -78,9 +94,9 @@ public class Mute
         }
 
         // no mute active or on ct unmute
-		if (!muteActive || player.IsCt())
+        if (!muteActive || player.IsCt())
             player.UnMute();
-    }   
+    }
 
     public void Death(CCSPlayerController? player)
     {
@@ -94,12 +110,12 @@ public class Mute
 
         if (Config.Settings.MuteDead)
         {
-            player.LocalizePrefix(MUTE_PREFIX,"mute.end_round");
+            player.LocalizePrefix(MUTE_PREFIX, "mute.end_round");
             player.Mute();
         }
     }
 
-    public void SwitchTeam(CCSPlayerController? player,int new_team)
+    public void SwitchTeam(CCSPlayerController? player, int new_team)
     {
         if (!player.IsLegal())
             return;
@@ -107,14 +123,14 @@ public class Mute
         ApplyListenFlags(player);
 
         // player not alive mute
-		if (!player.IsLegalAlive())
+        if (!player.IsLegalAlive())
             player.Mute();
 
-		// player is alive
-		else
-		{
+        // player is alive
+        else
+        {
             // on ct fine to unmute
-			if (new_team == Player.TEAM_CT)
+            if (new_team == Player.TEAM_CT)
                 player.UnMute();
 
             else
@@ -123,7 +139,7 @@ public class Mute
                 if (muteActive || Config.Prisoner.MuteAlways)
                     player.Mute();
             }
-		}
+        }
     }
 
     public JailConfig Config = new JailConfig();

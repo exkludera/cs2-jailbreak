@@ -1,5 +1,4 @@
-﻿
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -9,6 +8,9 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CSTimer = CounterStrikeSharp.API.Modules.Timers;
+using CS2_SimpleAdminApi;
+using CTBans.Shared;
+using Microsoft.Extensions.Logging;
 
 namespace JB;
 
@@ -30,7 +32,7 @@ public class WardenService : IWardenService
         return JailPlugin.warden.GetWarden();
     }
 }
- 
+
 // main plugin file, controls central hooking
 // defers to warden, lr and sd
 [MinimumApiVersion(244)]
@@ -39,14 +41,23 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     public override string ModuleName => "Jailbreak";
     public override string ModuleVersion => "0.5.1";
     public override string ModuleAuthor => "destoer, continued by exkludera";
-    
+
+    public ICS2_SimpleAdminApi? _SimpleAdminsharedApi;
+    private readonly PluginCapability<ICS2_SimpleAdminApi> _SimpleAdminCapability = new("simpleadmin:api");
+
+    public ICTBansApi? _CTBansApi;
+    public static PluginCapability<ICTBansApi> CTBansCapability { get; } = new("ctbans:api");
+
+    public bool SimpleAdminEnabled = false;
+    public bool CTBansEnabled = false;
+
     // Global event settings, used to filter plugin activits
     // during warday and SD
     bool isEventActive = false;
 
-    public JailConfig Config  { get; set; } = new JailConfig();
+    public JailConfig Config { get; set; } = new JailConfig();
 
-    public static PluginCapability<IWardenService> wardenService {get; } = new ("jailbreak:warden_service");
+    public static PluginCapability<IWardenService> wardenService { get; } = new("jailbreak:warden_service");
 
     public static bool IsWarden(CCSPlayerController? player)
     {
@@ -68,14 +79,14 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         globalCtx.isEventActive = false;
     }
 
-    public static void WinLR(CCSPlayerController? player,LastRequest.LRType type)
+    public static void WinLR(CCSPlayerController? player, LastRequest.LRType type)
     {
-        jailStats.Win(player,type);
+        jailStats.Win(player, type);
     }
 
     public static void LoseLR(CCSPlayerController? player, LastRequest.LRType type)
     {
-        jailStats.Loss(player,type);
+        jailStats.Loss(player, type);
     }
 
     public static void PurgePlayerStats(CCSPlayerController? player)
@@ -86,12 +97,12 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     public override void Load(bool hotReload)
     {
         globalCtx = this;
-        logs = new Logs(this); 
+        logs = new Logs(this);
 
-        Capabilities.RegisterPluginCapability(wardenService,() => new WardenService());
+        Capabilities.RegisterPluginCapability(wardenService, () => new WardenService());
 
         RegisterCommands();
-        
+
         RegisterHooks();
 
         RegisterListeners();
@@ -102,7 +113,51 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         Console.WriteLine("Sucessfully started JB");
 
-        AddTimer(Warden.LASER_TIME,warden.LaserTick,CSTimer.TimerFlags.REPEAT);
+        AddTimer(Warden.LASER_TIME, warden.LaserTick, CSTimer.TimerFlags.REPEAT);
+    }
+
+    public override void OnAllPluginsLoaded(bool hotReload)
+    {
+        try
+        {
+            _SimpleAdminsharedApi = _SimpleAdminCapability.Get();
+
+            if (_SimpleAdminsharedApi == null)
+            {
+                SimpleAdminEnabled = false;
+            }
+            else
+            {
+                Logger.LogInformation("Enabling SimpleAdmin integration.");
+                SimpleAdminEnabled = true;
+            }
+        }
+        catch (KeyNotFoundException)
+        {
+            Logger.LogWarning("SimpleAdmin plugin not found. SimpleAdmin integration will be disabled.");
+            SimpleAdminEnabled = false;
+            _SimpleAdminsharedApi = null;
+        }
+        try
+        {
+            _CTBansApi = CTBansCapability.Get();
+
+            if (_CTBansApi == null)
+            {
+                CTBansEnabled = false;
+            }
+            else
+            {
+                Logger.LogInformation("Enabling CTBans integration.");
+                CTBansEnabled = true;
+            }
+        }
+        catch (KeyNotFoundException)
+        {
+            Logger.LogWarning("CTBans plugin not found. CTBans integration will be disabled.");
+            CTBansEnabled = false;
+            _CTBansApi = null;
+        }
     }
 
     void LocalizePrefix()
@@ -115,14 +170,17 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         Mute.MUTE_PREFIX = Chat.Localize("mute.mute_prefix");
         Warden.TEAM_PREFIX = Chat.Localize("warden.team_prefix");
-        
+
         Warday.WARDAY_PREFIX = Chat.Localize("warday.warday_prefix");
-        Warden.WARDEN_PREFIX = Chat.Localize("warden.warden_prefix");    
+        Warden.WARDEN_PREFIX = Chat.Localize("warden.warden_prefix");
+
+        CTQueue.QUEUE_PREFIX = Chat.Localize("queue.queue_prefix");
+        CTQueue.JAILBREAK_PREFIX = Chat.Localize("jailbreak.game_prefix");
     }
 
     void StatDBReload()
     {
-        Task.Run(async () => 
+        Task.Run(async () =>
         {
             using var database = await jailStats.ConnectDB();
 
@@ -134,7 +192,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     {
         // give each sub plugin the config
         this.Config = config;
-        
+
         jailStats.Config = config;
         lr.Config = config;
 
@@ -142,6 +200,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         warden.mute.Config = config;
         warden.warday.Config = config;
         warden.block.Config = config;
+        warden.ctQueue.Config = config;
         JailPlayer.Config = config;
 
         sd.Config = config;
@@ -160,10 +219,10 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     }
 
     public static void KillCmd(CCSPlayerController? invoke)
-    {  
+    {
         if (invoke.IsLegalAlive())
         {
-            Chat.LocalizeAnnounce("","jail.kill_cmd",invoke.PlayerName);
+            Chat.LocalizeAnnounce("", "jail.kill_cmd", invoke.PlayerName);
             invoke.Slay();
         }
     }
@@ -185,6 +244,11 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         //warden
         AddCmd(Config.Guard.Warden.Commands.Warden, "take warden", warden.TakeWardenCmd);
         AddCmd(Config.Guard.Warden.Commands.UnWarden, "leave warden", warden.LeaveWardenCmd);
+
+        // CT Queue commands
+        AddCmd(Config.Guard.Queue.Commands.Join, "join CT queue", JoinQueueCmd);
+        AddCmd(Config.Guard.Queue.Commands.Leave, "leave CT queue", LeaveQueueCmd);
+        AddCmd(Config.Guard.Queue.Commands.List, "list CT queue", ListQueueCmd);
 
         AddCmd(Config.Guard.Warden.Commands.RemoveMarker, "remove warden marker", warden.RemoveMarkerCmd);
         AddCmd(Config.Guard.Warden.Commands.MarkerColor, "set marker color", warden.MarkerColourCmd);
@@ -227,25 +291,41 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         AddCmd(Config.Settings.AdminCommands.SpecialDayCancel, "cancel an sd", sd.CancelSDCmd);
         AddCmd(Config.Settings.AdminCommands.FireGuard, "admin : Remove all guards apart from warden", warden.FireGuardCmd);
         AddCommand(Config.Settings.AdminCommands.SwapGuard, "admin : move a player to ct", warden.SwapGuardCmd);
-        
+
         // debug 
         if (Debug.enable)
         {
-            AddCommand("nuke","debug : kill every player",Debug.Nuke);
-            AddCommand("is_rebel","debug : print rebel state to console",warden.IsRebelCmd);
-            AddCommand("lr_debug","debug : start an lr without restriction",lr.LRDebugCmd);
-            AddCommand("is_blocked","debug : print block state",warden.block.IsBlocked);
-            AddCommand("test_laser","test laser",Debug.TestLaser);
-            AddCommand("test_player","testt player",Debug.TestPlayer);
-            AddCommand("test_strip","test weapon strip",Debug.TestStripCmd);
-            AddCommand("join_ct_debug","debug : force join ct",Debug.JoinCtCmd);
-            AddCommand("hide_weapon_debug","debug : hide player weapon on back",Debug.HideWeaponCmd);
-            AddCommand("rig","debug : force player to boss on sd",sd.SDRigCmd);
-            AddCommand("is_muted","debug : print voice flags",Debug.IsMutedCmd);
-            AddCommand("spam_db","debug : spam db",Debug.TestLRInc);
-            AddCommand("wsd_enable","debug : enable wsd",Debug.WSDEnableCmd);
-            AddCommand("test_noblock","debug : enable wsd",Debug.TestNoblockCmd);
+            AddCommand("nuke", "debug : kill every player", Debug.Nuke);
+            AddCommand("is_rebel", "debug : print rebel state to console", warden.IsRebelCmd);
+            AddCommand("lr_debug", "debug : start an lr without restriction", lr.LRDebugCmd);
+            AddCommand("is_blocked", "debug : print block state", warden.block.IsBlocked);
+            AddCommand("test_laser", "test laser", Debug.TestLaser);
+            AddCommand("test_player", "testt player", Debug.TestPlayer);
+            AddCommand("test_strip", "test weapon strip", Debug.TestStripCmd);
+            AddCommand("join_ct_debug", "debug : force join ct", Debug.JoinCtCmd);
+            AddCommand("hide_weapon_debug", "debug : hide player weapon on back", Debug.HideWeaponCmd);
+            AddCommand("rig", "debug : force player to boss on sd", sd.SDRigCmd);
+            AddCommand("is_muted", "debug : print voice flags", Debug.IsMutedCmd);
+            AddCommand("spam_db", "debug : spam db", Debug.TestLRInc);
+            AddCommand("wsd_enable", "debug : enable wsd", Debug.WSDEnableCmd);
+            AddCommand("test_noblock", "debug : enable wsd", Debug.TestNoblockCmd);
         }
+    }
+
+    // CT Queue command handlers
+    void JoinQueueCmd(CCSPlayerController? invoke)
+    {
+        warden.ctQueue.JoinQueue(invoke);
+    }
+
+    void LeaveQueueCmd(CCSPlayerController? invoke)
+    {
+        warden.ctQueue.LeaveQueue(invoke);
+    }
+
+    void ListQueueCmd(CCSPlayerController? invoke)
+    {
+        warden.ctQueue.ListQueue(invoke);
     }
 
     public HookResult JoinTeam(CCSPlayerController? invoke, CommandInfo command)
@@ -255,9 +335,20 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         JailPlayer? jailPlayer = warden.JailPlayerFromPlayer(invoke);
 
         if (jailPlayer != null)
-            jailPlayer.LoadPlayer(invoke);  
+            jailPlayer.LoadPlayer(invoke);
 
-        if (!warden.JoinTeam(invoke,command))
+        // Check if player is trying to join CT and should be queued instead
+        if (command.ArgCount >= 2 && Int32.TryParse(command.ArgByIndex(1), out int team))
+        {
+            if (team == Player.TEAM_CT && Config.Guard.Queue.Enabled)
+            {
+                // Always put players in queue instead of allowing direct CT joins
+                warden.ctQueue.JoinQueue(invoke);
+                return HookResult.Handled;
+            }
+        }
+
+        if (!warden.JoinTeam(invoke, command))
             return HookResult.Handled;
 
         return HookResult.Continue;
@@ -266,13 +357,13 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     void RegisterHooks()
     {
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
-        RegisterEventHandler<EventRoundEnd>(OnRoundEnd,HookMode.Pre);
+        RegisterEventHandler<EventRoundEnd>(OnRoundEnd, HookMode.Pre);
         RegisterEventHandler<EventWeaponFire>(OnWeaponFire);
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
         RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
         RegisterEventHandler<EventTeamchangePending>(OnSwitchTeam);
         RegisterEventHandler<EventMapTransition>(OnMapChange);
-        RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath,HookMode.Pre);
+        RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath, HookMode.Pre);
         RegisterEventHandler<EventItemEquip>(OnItemEquip);
         RegisterEventHandler<EventGrenadeThrown>(OnGrenadeThrown);
         RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
@@ -283,15 +374,15 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         // cant figure out why because the windows cs2 console wont log
         // before it dies
         if (!Lib.IsWindows())
-            VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage,HookMode.Pre);
-        
+            VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
+
         HookEntityOutput("func_button", "OnPressed", OnButtonPressed);
-        
+
         RegisterListener<Listeners.OnClientVoice>(OnClientVoice);
         RegisterListener<Listeners.OnClientAuthorized>(OnClientAuthorized);
 
-        AddCommandListener("jointeam",JoinTeam);
-        AddCommandListener("player_ping",PlayerPingCmd);
+        AddCommandListener("jointeam", JoinTeam);
+        AddCommandListener("player_ping", PlayerPingCmd);
 
         AddCommandListener("say", OnPlayerChat);
 
@@ -302,7 +393,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     public HookResult OnPlayerChat(CCSPlayerController? invoke, CommandInfo command)
     {
         // dont print chat, warden is handling it
-        if (!warden.PlayerChat(invoke,command))
+        if (!warden.PlayerChat(invoke, command))
             return HookResult.Handled;
 
         return HookResult.Continue;
@@ -317,12 +408,12 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         return HookResult.Continue;
     }
 
-    HookResult OnPlayerPing(EventPlayerPing  @event, GameEventInfo info)
+    HookResult OnPlayerPing(EventPlayerPing @event, GameEventInfo info)
     {
         var player = @event.Userid;
 
         if (player.IsLegal())
-            warden.Ping(player,@event.X,@event.Y,@event.Z);
+            warden.Ping(player, @event.X, @event.Y, @event.Z);
 
         return HookResult.Continue;
     }
@@ -341,7 +432,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         CCSPlayerController? player = new CBaseEntity(activator.Handle).Player();
 
         // grab player controller from pawn
-        CBaseEntity? ent =  Utilities.GetEntityFromIndex<CBaseEntity>((int)caller.Index);
+        CBaseEntity? ent = Utilities.GetEntityFromIndex<CBaseEntity>((int)caller.Index);
 
         if (player.IsLegal() && ent != null && ent.IsValid)
             logs.AddLocalized(player, "logs.format.button", ent.Entity?.Name ?? "Unlabeled", output?.Connections?.TargetDesc ?? "None");
@@ -351,7 +442,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
     public override void Unload(bool hotReload)
     {
-        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage,HookMode.Pre);
+        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
     }
 
     HookResult OnGrenadeThrown(EventGrenadeThrown @event, GameEventInfo info)
@@ -362,12 +453,12 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         {
             lr.GrenadeThrown(player);
             sd.GrenadeThrown(player);
-            logs.AddLocalized(player, "logs.format.grenade", @event.Weapon); 
+            logs.AddLocalized(player, "logs.format.grenade", @event.Weapon);
         }
 
         return HookResult.Continue;
     }
-  
+
     HookResult OnWeaponZoom(EventWeaponZoom @event, GameEventInfo info)
     {
         CCSPlayerController? player = @event.Userid;
@@ -382,11 +473,19 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     {
         CCSPlayerController? player = @event.Userid;
 
-        if (player.IsLegal())
-        {
-            lr.WeaponEquip(player,@event.Item);
-            sd.WeaponEquip(player,@event.Item);
-        }
+        if (!player.IsLegal())
+            return HookResult.Continue;
+
+        // Skip if we're already processing an equip event for this player
+        if (playerEquipState.TryGetValue(player.Slot, out bool isProcessing) && isProcessing)
+            return HookResult.Continue;
+
+        playerEquipState[player.Slot] = true;
+
+        lr.WeaponEquip(player, @event.Item);
+        sd.WeaponEquip(player, @event.Item);
+
+        playerEquipState[player.Slot] = false;
 
         return HookResult.Continue;
     }
@@ -402,9 +501,9 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         if (player.IsLegal())
         {
-            lr.PlayerHurt(player,attacker,damage,health,hitgroup);
-            warden.PlayerHurt(player,attacker,damage,health);
-            sd.PlayerHurt(player,attacker,damage,health,hitgroup);
+            lr.PlayerHurt(player, attacker, damage, health, hitgroup);
+            warden.PlayerHurt(player, attacker, damage, health);
+            sd.PlayerHurt(player, attacker, damage, health, hitgroup);
         }
 
         return HookResult.Continue;
@@ -423,11 +522,11 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         if (player.IsLegal())
         {
-            warden.TakeDamage(player,attacker,ref damage_info.Damage);
-            sd.TakeDamage(player,attacker,ref damage_info.Damage);
-            lr.TakeDamage(player,attacker,ref damage_info.Damage);
+            warden.TakeDamage(player, attacker, ref damage_info.Damage);
+            sd.TakeDamage(player, attacker, ref damage_info.Damage);
+            lr.TakeDamage(player, attacker, ref damage_info.Damage);
         }
-        
+
         return HookResult.Continue;
     }
 
@@ -453,19 +552,19 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         CCSPlayerController? killer = @event.Attacker;
 
         // NOTE: have to check IsConnected incase this is tripped by a dc
-    
+
         // hide t killing ct
         if (Config.Settings.HideKills && victim.IsConnected() && killer.IsConnected() && killer.IsT() && victim.IsCt())
         {
-            killer.Announce(Warden.WARDEN_PREFIX,$"You killed: {victim.PlayerName}");
+            killer.Announce(Warden.WARDEN_PREFIX, $"You killed: {victim.PlayerName}");
             info.DontBroadcast = true;
         }
-    
+
         if (victim.IsLegal() && victim.IsConnected())
         {
-            warden.Death(victim,killer);
+            warden.Death(victim, killer);
             lr.Death(victim);
-            sd.Death(victim,killer,@event.Weapon);
+            sd.Death(victim, killer, @event.Weapon);
         }
         return HookResult.Continue;
     }
@@ -478,11 +577,11 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         {
             int slot = player.Slot;
 
-            AddTimer(0.5f,() =>  
+            AddTimer(0.5f, () =>
             {
                 warden.Spawn(Utilities.GetPlayerFromSlot(slot));
             });
-            
+
         }
 
         return HookResult.Continue;
@@ -498,7 +597,20 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         {
             // close menu on team switch to prevent illegal usage
             //MenuManager.CloseActiveMenu(player);
-            warden.SwitchTeam(player,new_team);
+            warden.SwitchTeam(player, new_team);
+
+            // If player is joining as T and CT queue is enabled, inform them about the queue
+            if (new_team == Player.TEAM_T && Config.Guard.Queue.Enabled && !warden.ctQueue.IsInQueue(player))
+            {
+                // Add a small delay to ensure the message is seen after team join messages
+                AddTimer(1.0f, () =>
+                {
+                    if (player.IsLegal() && player.IsT())
+                    {
+                        player.Announce(CTQueue.QUEUE_PREFIX, "You've joined as a Terrorist. Type !ct to join the CT queue.");
+                    }
+                });
+            }
         }
 
         return HookResult.Continue;
@@ -512,7 +624,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         {
             // load in player stats
             jailStats.LoadPlayer(player);
-            
+
             JailPlayer? jailPlayer = warden.JailPlayerFromPlayer(player);
 
             if (jailPlayer != null)
@@ -529,6 +641,8 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
             warden.Disconnect(player);
             lr.Disconnect(player);
             sd.Disconnect(player);
+
+            // Queue processing only happens at round start/end
         }
 
         return HookResult.Continue;
@@ -551,16 +665,16 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         if (player.IsLegalAlive())
         {
-            warden.WeaponFire(player,name);
-            lr.WeaponFire(player,name);
+            warden.WeaponFire(player, name);
+            lr.WeaponFire(player, name);
         }
 
         return HookResult.Continue;
     }
 
-    public static String Localize(string name,params Object[] args)
+    public static String Localize(string name, params Object[] args)
     {
-        return String.Format(globalCtx.Localizer[name],args);
+        return String.Format(globalCtx.Localizer[name], args);
     }
 
     public static Warden warden = new Warden();
@@ -576,5 +690,8 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     // workaround to query global state!
     public static JailPlugin globalCtx;
 
-    #pragma warning restore CS8618
+    // Track equip state per player
+    private Dictionary<int, bool> playerEquipState = new Dictionary<int, bool>();
+
+#pragma warning restore CS8618
 }

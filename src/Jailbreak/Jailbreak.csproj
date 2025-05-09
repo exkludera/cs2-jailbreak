@@ -4,6 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,4 +13,27 @@
         <PackageReference Include="MySqlConnector" Version="2.3.7" />
         <ProjectReference Include="../WardenService/WardenService.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+        <RuntimeHostConfigurationOption Include="SQLitePCLRaw.lib.e_sqlite3.linux" Value="true" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Reference Include="CS2-SimpleAdminApi">
+        <HintPath>CS2-SimpleAdminApi.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+    <Reference Include="CTBansShared">
+        <HintPath>CTBansShared.dll</HintPath>
+    </Reference>
+</ItemGroup>
+
+    <ItemGroup>
+        <None Include="lang\**\*.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

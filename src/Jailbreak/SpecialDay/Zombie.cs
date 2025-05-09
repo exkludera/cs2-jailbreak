@@ -6,10 +6,10 @@ public class SDZombie : SDBase
 {
     public override void Setup()
     {
-        for(int i = 0; i < 64; i++)
+        for (int i = 0; i < 64; i++)
             deathCount[i] = 0;
 
-        LocalizeAnnounce("sd.damage_enable",delay);
+        LocalizeAnnounce("sd.damage_enable", delay);
 
         JB.Lib.SwapAllCT();
     }
@@ -19,7 +19,7 @@ public class SDZombie : SDBase
     {
         if (patientZero.IsLegalAlive())
         {
-            LocalizeAnnounce($"sd.patient_zero",patientZero.PlayerName);
+            LocalizeAnnounce($"sd.patient_zero", patientZero.PlayerName);
 
             // give the tank the HP and swap him
             patientZero.SetHealth(count * 1000);
@@ -27,7 +27,7 @@ public class SDZombie : SDBase
             SetupZombie(patientZero);
         }
 
-        else Chat.Announce("[ERROR]: ","Error picking patient zero");
+        else Chat.Announce("[ERROR]: ", "Error picking patient zero");
     }
 
     public override void Start()
@@ -35,21 +35,21 @@ public class SDZombie : SDBase
         LocalizeAnnounce("sd.fight");
 
         (CCSPlayerController? boss, int count) = PickBoss();
-        MakeBoss(boss,count);
+        MakeBoss(boss, count);
     }
 
     public void ZombieRespawn(CCSPlayerController player, float delay)
     {
-        ResurectPlayer(player,3.0f);
+        ResurectPlayer(player, 3.0f);
     }
 
-    public override void Death(CCSPlayerController? player, CCSPlayerController? attacker,String weapon)
+    public override void Death(CCSPlayerController? player, CCSPlayerController? attacker, String weapon)
     {
         // Dont run the death event if the sd is not  active
         // to prevent exploits
         if (!player.IsLegal() || state != SDState.ACTIVE)
             return;
-        
+
 
         // CT died make them a zombie
         if (player.IsCt())
@@ -57,7 +57,7 @@ public class SDZombie : SDBase
             var left = JB.Lib.GetAliveCt();
 
             // last player just let them die
-            if(left.Count() <= 0)
+            if (left.Count() <= 0)
                 return;
 
             // handle last man standing
@@ -65,13 +65,13 @@ public class SDZombie : SDBase
             {
                 var last = left[0];
 
-                LocalizeAnnounce("sd.last_man_standing",last.PlayerName);
+                LocalizeAnnounce("sd.last_man_standing", last.PlayerName);
 
                 last.SetHealth(350);
             }
 
             player.SwitchTeam(CsTeam.Terrorist);
-            
+
             var pawn = player.Pawn();
 
             // save death cordinates
@@ -88,7 +88,7 @@ public class SDZombie : SDBase
             else deathCount[player.Slot] = 2;
 
             // First death has a very fast respawn
-            ResurectPlayer(player,0.3f);
+            ResurectPlayer(player, 0.3f);
         }
 
         // zombie, respawn them on patient zero if alive
@@ -96,12 +96,12 @@ public class SDZombie : SDBase
         {
             var patientZero = Utilities.GetPlayerFromSlot(bossSlot);
 
-            if(patientZero.IsLegalAlive())
-                ResurectPlayer(player,3.0f);
+            if (patientZero.IsLegalAlive())
+                ResurectPlayer(player, 3.0f);
         }
     }
 
-    public override void PlayerHurt(CCSPlayerController? player,CCSPlayerController? attacker,int health,int damage, int hitgroup) 
+    public override void PlayerHurt(CCSPlayerController? player, CCSPlayerController? attacker, int health, int damage, int hitgroup)
     {
         if (!player.IsLegalAlive() || !attacker.IsLegalAlive())
             return;
@@ -114,7 +114,7 @@ public class SDZombie : SDBase
 
 
         // only want zombie to ct damage knockback
- 
+
         if (!player.IsT() || !attacker.IsCt())
             return;
 
@@ -123,21 +123,21 @@ public class SDZombie : SDBase
         var attackerPawn = attacker.Pawn();
 
 
-        if(playerPawn != null && attackerPawn != null && playerPawn.AbsVelocity != null 
+        if (playerPawn != null && attackerPawn != null && playerPawn.AbsVelocity != null
             && playerPawn.AbsOrigin != null && attackerPawn.AbsOrigin != null)
         {
-            Vector pos = Vec.Sub(attackerPawn.AbsOrigin,playerPawn.AbsOrigin);
+            Vector pos = Vec.Sub(attackerPawn.AbsOrigin, playerPawn.AbsOrigin);
             pos = Vec.Normalize(pos);
 
             float scale = 30.0f;
 
             // scale it (may need balancing)
             Vector push = Vec.Scale(pos, scale);
-        
+
             //Server.PrintToChatAll($"damage {damage}");
             //Server.PrintToChatAll($"pos {pos.X} {pos.Y} {pos.Z}");
             //Server.PrintToChatAll($"push {push.X} {push.Y} {push.Z}");
-        
+
             playerPawn.AbsVelocity.Add(push);
         }
     }
@@ -146,7 +146,7 @@ public class SDZombie : SDBase
     {
     }
 
-    public override bool WeaponEquip(CCSPlayerController player,String name) 
+    public override bool WeaponEquip(CCSPlayerController player, String name)
     {
         // zombie can only have knife
         if (player.IsT())
@@ -184,7 +184,7 @@ public class SDZombie : SDBase
                 if (pawn != null && pawn.AbsOrigin != null)
                     player.PlayerPawn.Value!.Teleport(pawn.AbsOrigin, JB.Lib.ANGLE_ZERO, JB.Lib.VEC_ZERO);
             }
-        }     
+        }
     }
 
     public override void SetupPlayer(CCSPlayerController player)
@@ -199,7 +199,7 @@ public class SDZombie : SDBase
         {
             SetupZombie(player);
 
-            if(player.Slot != bossSlot)
+            if (player.Slot != bossSlot)
                 player.SetHealth(250);
 
             TeleportZombie(player);
